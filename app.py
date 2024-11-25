@@ -1,3 +1,4 @@
+import base64
 from io import BytesIO
 
 from flask import Flask, request, jsonify
@@ -22,7 +23,18 @@ def detect():
     results = model(img)
     class_names = extract_class(results)
 
-    return jsonify({"names": class_names})
+    results.render()
+    rendered_image = Image.fromarray(results.ims[0])
+
+    buffered = BytesIO()
+    rendered_image.save(buffered, format="JPEG")
+    image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+    response = {
+        "names": class_names,
+        "image": image_base64
+    }
+    return jsonify(response)
 
 
 def extract_class(results):
